@@ -16,16 +16,19 @@ class VAE(object):
         learning_rate = 0.001,
         batch_size = 256,
         latent_dim = 2,
-        binary_data = True,
-        img_shape = [28, 28, 1] # W, H, D
+        binary_data = True, # 0-1, not thresholded
+        img_shape = [28, 28, 1], # W, H, D
+        use_conv = False
         ):
         self.learning_rate = learning_rate
         self.batch_size = batch_size
         self.latent_dim = latent_dim
         self.binary_data = binary_data
         self.img_shape = img_shape
+        self.use_conv = use_conv
         self.full_graph = False
         self._build_training_model()
+
 
     def conv_encode(self, input_data):
         conv1 = tflearn.conv_2d(input_data, 32, 5, activation='elu')
@@ -40,16 +43,34 @@ class VAE(object):
         deconv2 = tflearn.conv_2d_transpose(fc1, 1, 3, self.img_shape, 2, activation=recon_activ)
         return deconv2
 
+    def fc_encode(self, input_data):
+        net = tflearn.fully_connected(input_data, 300, activation='elu')
+        net = tflearn.fully_connected(net, 100, activation='elu')
+        return net
+
+    def fc_decode(self, z_sampled):
+        recon_activ = 'sigmoid' if self.binary_data else 'linear'
+        net = tflearn.fully_connected(z_sampled, 100, activation='elu')
+        net = tflearn.fully_connected(net, 300, activation='elu')
+        net = tflearn.fully_connected(net, 784, activation=recon_activ)
+        return net
+
     def _encode(self, input_data, is_training):
         with tf.variable_scope('Encoder', reuse=not is_training):
-            net = self.conv_encode(input_data)
+            if self.use_conv:
+                net = self.conv_encode(input_data)
+            else:
+                net = self.fc_encode(input_data)
             z_mean = tflearn.fully_connected(net, self.latent_dim)
             z_std = tflearn.fully_connected(net, self.latent_dim)
         return z_mean, z_std
         
     def _decode(self, z_sampled, is_training):
         with tf.variable_scope('Decoder', reuse=not is_training):
-            net = self.conv_decode(z_sampled)
+            if self.use_conv:
+                net = self.conv_decode(z_sampled)
+            else:
+                net = self.fc_decode(z_sampled)
         return net
 
     def _sample_z(self, z_mean, z_std):
@@ -109,8 +130,10 @@ class VAE(object):
             input_noise = np.random.normal(size=(1, self.latent_dim))
         else:
             input_noise = input_noise.reshape((-1, self.latent_dim))
-        output = self.generator_model.predict({'input_noise': input_noise})
-        return np.array(output)
+        output = np.array(self.generator_model.predict({'input_noise': input_noise}))
+        if not self.use_conv:
+            output = output.reshape((-1, *self.img_shape))
+        return output
 
     def encode(self, input_data):
         if not self.full_graph:
