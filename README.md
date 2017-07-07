@@ -7,8 +7,9 @@ My implementation of Variational Autoencoder and its variants using TFLearn
 
 Implemented Features:
 
-    + Vanilla VAE: show 2D latent space, image transition, reconstruction
+    + Vanilla VAE: show 2D latent space, image transition, reconstruction
     + Conditional VAE: conditional generation, better reconstruction, style transfer
+
 
 :TODO:
 
