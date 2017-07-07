@@ -7,10 +7,11 @@ My implementation of Variational Autoencoder and its variants using TFLearn
 
 Implemented Features:
 
-    + Vanilla VAE with MNIST: display 2D latent space, transition between two images from dataset
+    + Vanilla VAE: show 2D latent space, image transition, reconstruction
+    + Conditional VAE: conditional generation, better reconstruction, style transfer
 
 :TODO:
 
-    + Conditional VAE, CVAE+GAN, DRAW
+    + CVAE+GAN, DRAW
     + Fun experiments with AR Face Database
-    + Less likely: DRAW+GAN, VAE(Semi-Supervised Learning), VAE+GAN
+    + Less likely to do: DRAW+GAN, VAE(Semi-Supervised Learning), VAE+GAN
